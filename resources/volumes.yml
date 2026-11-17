@@ -1,0 +1,8 @@
+resources:
+  volumes:
+    espn_raw:
+      name: espn_raw
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.landing.name}
+      volume_type: MANAGED
+      comment: "This is where the ingest job will write the raw ESPN JSON files"

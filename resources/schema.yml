@@ -1,0 +1,18 @@
+resources:
+  schemas:
+    landing:
+      name: landing
+      catalog_name: ${var.catalog}
+      comment: landing schema
+    bronze:
+      name: bronze
+      catalog_name: ${var.catalog}
+      comment: bronze schema
+    silver:
+      name: silver
+      catalog_name: ${var.catalog}
+      comment: silver schema
+    gold:
+      name: gold
+      catalog_name: ${var.catalog}
+      comment: gold schema
