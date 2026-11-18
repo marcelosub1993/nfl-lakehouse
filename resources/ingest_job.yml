@@ -1,0 +1,33 @@
+resources:
+  jobs:
+    espn_ingest:
+      name: espn_ingest
+      description: "Fetch raw ESPN NFL JSON (teams, scoreboard, rosters) into the landing zone"
+
+      tags:
+        project: nfl
+
+      max_concurrent_runs: 1
+      timeout_seconds: 900
+      performance_target: STANDARD
+
+      parameters:
+        - name: date
+          default: ""
+
+      environments:
+        - environment_key: default 
+          spec: 
+            environment_version: "5"
+
+      tasks:
+        - task_key: ingest_espn
+          environment_key: default
+          spark_python_task: 
+            python_file: ../src/ingest/ingest_espn.py
+            parameters:
+             - "--volume-path"
+             - "${resources.volumes.espn_raw.volume_path}"
+             - "--date"
+             - "{{job.parameters.date}}"
+
