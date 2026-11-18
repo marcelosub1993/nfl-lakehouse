@@ -12,6 +12,7 @@ resources:
       
       configuration:
         landing_path: ${resources.volumes.espn_raw.volume_path}
+        silver_schema: ${resources.schemas.silver.name}
 
       libraries:
         - glob:
