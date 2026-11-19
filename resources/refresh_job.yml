@@ -1,0 +1,18 @@
+resources:
+  jobs:
+    nfl_refresh:
+      name: nfl_refresh
+      description: "Run nfl_pipeline (bronze -> silver -> gold) in STANDARD mode to save costs."
+
+      tags:
+        project: nfl
+
+      max_concurrent_runs: 1
+      timeout_seconds: 900
+      performance_target: STANDARD
+
+      tasks:
+        - task_key: refresh_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.nfl_pipeline.id}
+            full_refresh: false
