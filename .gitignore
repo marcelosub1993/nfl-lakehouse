@@ -15,6 +15,7 @@ token-cache.json
 # --- Python ---
 .venv/
 venv/
+.venv-spark
 __pycache__/
 *.py[cod]
 *.egg-info/

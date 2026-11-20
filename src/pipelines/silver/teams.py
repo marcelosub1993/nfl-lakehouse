@@ -35,7 +35,7 @@ def teams_parsed():
     return(
         spark.readStream.table("teams_raw")
         .select(
-            F.explode(F.from_json("sports", SPORTS_SCHEMA)[0]['leagues']['teams']['team'][0]).alias("team"),
+            F.explode(F.from_json("sports", SPORTS_SCHEMA)[0]['leagues'][0]['teams']['team']).alias("team"),
             "_file_modified_at",
         )
         .select(
