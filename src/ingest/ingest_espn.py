@@ -2,19 +2,20 @@
 Ingest raw ESPN NFL JSON into the landing volume
 
 Usage:
-    Python ingest_espn.py --volume-path /Volumes/<catalog>/<schema>/<volume> [--date YYYYMMDD] [--skip-rosters]
+    Python ingest_espn.py --volume-path /Volumes/<catalog>/<schema>/<volume> [--date YYYYMMDD] [--end-date YYYYMMDD] [--skip-rosters]
 """
 import argparse
 import requests
 import time
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 BASE_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl"
 MAX_RETRIES = 3
 TIMEOUT_SECONDS = 30
 PAUSE_BETWEEN_CALLS = 0.5 # seconds, be polite to the API
+MAX_RANGE_DAYS = 120 # safety limit
 
 def build_url(endpoint: str) -> str:
     """'teams' -> https://.../nfl/teams"""
@@ -52,19 +53,35 @@ def write_json(data: dict, target: Path) -> None:
     tmp.rename(target)
     print(f"WROTE {target}")
 
+def date_range(start: str, end: str) -> list[str]:
+    """'20261115', '20261117' ->  ['20261115', '20261116', '20261117']"""
+    first = datetime.strptime(start, "%Y%m%d")
+    last = datetime.strptime(end, "%Y%m%d")
+    days = (last - first).days
+    return [(first + timedelta(days=i)).strftime("%Y%m%d") for i in range(days + 1)]
 # ------------- entry point ---------------
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Ingest ESPN data into a landing volume")
     parser.add_argument("--volume-path", required=True, help="Root folder, e.g /Volumes/cat/schema/vol")
     parser.add_argument("--date", default=None, help="Scoreboard date YYYYMMDD (default: today UTC)")
+    parser.add_argument("--end-date", default=None, help="Last scoreboard date YYYYMMDD for a backfill (default: same as --date)")
+
     parser.add_argument("--skip-rosters", action="store_true", help="Skip the 32 roster calls")
     args = parser.parse_args()
 
     # Job parameters can arrive as an empty string, so treat "" like "not given"
     if not args.date:
         args.date = datetime.now(timezone.utc).strftime("%Y%m%d")
-    datetime.strptime(args.date, "%Y%m%d") #fail fast on a bad format
+    if not args.end_date:
+        args.end_date = args.date
+
+    datetime.strptime(args.date, "%Y%m%d") # fail fast on a bad format
+    datetime.strptime(args.end_date, "%Y%m%d")
+    if args.end_date < args.date:
+        raise ValueError(f"--end-date {args.end_date} is before --date {args.date}")
+    if len(date_range(args.date, args.end_date)) > MAX_RANGE_DAYS:
+        raise ValueError(f"Range too long (max {MAX_RANGE_DAYS} days)")
     return args
 
 def main() -> None:
@@ -77,9 +94,12 @@ def main() -> None:
     teams = fetch_json(build_url("teams"))
     write_json(teams, build_output_path(args.volume_path, "teams", ingest_partition, ts))
 
-    # 2) Scoreboard for one game date
-    scoreboard = fetch_json(build_url("scoreboard"), params={"dates": args.date})
-    write_json(scoreboard, build_output_path(args.volume_path, "scoreboard", f"game_date={args.date}", ts))
+    # 2) Scoreboard for one file per game date (one date or a range)
+    for game_date in date_range(args.date, args.end_date):
+        scoreboard = fetch_json(build_url("scoreboard"), params={"dates": game_date})
+        write_json(scoreboard, build_output_path(args.volume_path, "scoreboard", f"game_date={game_date}", ts))
+        time.sleep( PAUSE_BETWEEN_CALLS)
+
 
     # 3) Rosters, one file per team
     if not args.skip_rosters:
@@ -88,7 +108,7 @@ def main() -> None:
             roster = fetch_json(build_url(f"teams/{team_id}/roster"))
             write_json(roster, build_output_path(args.volume_path, "rosters", ingest_partition, ts, f"team_{team_id}"))
 
-    print(f"DONE date={args.date} ts={ts}")
+    print(f"DONE dates={args.date}..{args.end_date} ts={ts}")
 
 if __name__ == "__main__":
     main()

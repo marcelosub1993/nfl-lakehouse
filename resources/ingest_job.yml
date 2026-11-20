@@ -8,11 +8,13 @@ resources:
         project: nfl
 
       max_concurrent_runs: 1
-      timeout_seconds: 900
+      timeout_seconds: 1800
       performance_target: STANDARD
 
       parameters:
         - name: date
+          default: ""
+        - name: end_date
           default: ""
 
       environments:
@@ -28,6 +30,8 @@ resources:
             parameters:
              - "--volume-path"
              - "${resources.volumes.espn_raw.volume_path}"
+             - "--end-date"
+             - "{{job.parameters.end_date}}"
              - "--date"
              - "{{job.parameters.date}}"
 
