@@ -29,7 +29,7 @@ def test_roster_summary_counts_only_current_players(spark):
     result = {r["team_id"]: r for r in build_team_roster_summary(teams, players).collect()}
 
     cin = result["1"]
-    assert cin["total_players"] == 5  # the released player is not counted
+    assert cin["total_players"] == 4  # the released player is not counted
     assert cin["active_roster"] == 2
     assert cin["active_roster"] + cin["practice_squad"] + cin["injured_reserve"] == cin["total_players"]
     assert cin["roster_as_of"] == NOV_23
