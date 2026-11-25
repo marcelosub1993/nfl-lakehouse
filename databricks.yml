@@ -12,6 +12,8 @@ sync:
   exclude:
     - setup/
     - README.md
+    - tests/
+    - pyproject.toml
 
 variables:
   catalog:
