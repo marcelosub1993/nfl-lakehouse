@@ -1,0 +1,46 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_TOKEN_AUDIENCE: ${{ vars.DATABRICKS_TOKEN_AUDIENCE }}
+    
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Install the Databricks CLI
+        uses: databricks/setup-cli@v1.26.0
+
+      - name: Check who CD is logged in as
+        run: databricks current-user me
+
+      - name: Validate the prod target
+        run: databricks bundle validate --strict -t prod
+
+      - name: Deploy to prod
+        run: databricks bundle deploy -t prod
+
+      - name: Show what is deployed
+        run: databricks bundle summary -t prod
