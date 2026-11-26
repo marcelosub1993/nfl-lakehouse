@@ -41,3 +41,32 @@ jobs:
       
       - name: Run unit tests
         run: python -m pytest -v
+  
+  bundle-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ci
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_TOKEN_AUDIENCE: ${{ vars.DATABRICKS_TOKEN_AUDIENCE }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Install the Databricks CLI
+        uses: databricks/setup-cli@v1.26.0
+      
+      - name: Check who CI is logged in as
+        run: databricks current-user me
+
+      - name: Validate the dev target
+        run: databricks bundle validate --strict -t dev
+      
+      - name: Validate the prod target
+        run: databricks bundle validate --strict -t prod
