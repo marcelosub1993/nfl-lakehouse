@@ -42,7 +42,7 @@ jobs:
       - name: Run unit tests
         run: python -m pytest -v
   
-  bundle_validate:
+  bundle-validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: ci
