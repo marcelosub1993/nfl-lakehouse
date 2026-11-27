@@ -54,6 +54,7 @@ jobs:
       DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
       DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
       DATABRICKS_TOKEN_AUDIENCE: ${{ vars.DATABRICKS_TOKEN_AUDIENCE }}
+      BUNDLE_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
 
     steps:
       - name: Check out the code
