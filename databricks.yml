@@ -21,11 +21,14 @@ variables:
   prod_deployer:
     description: Application ID of the service principal that deploys and runs prod
     default: cd781d7f-7da7-43f1-929c-ce45c09a84bb
+  alert_email:
+    description: Email that gets job failure alerts (set by BUNDLE_VAR_alert_email in CI/CD; never committed)
 
 targets:
   dev:
     variables:
       catalog: nfl_dev
+      alert_email: ${workspace.current_user.userName}
     mode: development
     default: true
     workspace:

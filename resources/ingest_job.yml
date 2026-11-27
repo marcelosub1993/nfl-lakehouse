@@ -16,6 +16,8 @@ resources:
           default: ""
         - name: end_date
           default: ""
+        - name: days_back
+          default: ""
 
       environments:
         - environment_key: default 
@@ -34,4 +36,6 @@ resources:
              - "{{job.parameters.end_date}}"
              - "--date"
              - "{{job.parameters.date}}"
+             - "--days-back"
+             - "{{job.parameters.days_back}}"
 

@@ -66,11 +66,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--volume-path", required=True, help="Root folder, e.g /Volumes/cat/schema/vol")
     parser.add_argument("--date", default=None, help="Scoreboard date YYYYMMDD (default: today UTC)")
     parser.add_argument("--end-date", default=None, help="Last scoreboard date YYYYMMDD for a backfill (default: same as --date)")
+    parser.add_argument("--days-back", default=None, help="Used only when --date is empty: scoreboard range = today UTC minus N days .. today")
 
     parser.add_argument("--skip-rosters", action="store_true", help="Skip the 32 roster calls")
     args = parser.parse_args()
 
     # Job parameters can arrive as an empty string, so treat "" like "not given"
+    if not args.date and args.days_back:
+        today = datetime.now(timezone.utc)
+        args.date = (today - timedelta(days=int(args.days_back))).strftime("%Y%m%d")
+        args.end_date = today.strftime("%Y%m%d")
     if not args.date:
         args.date = datetime.now(timezone.utc).strftime("%Y%m%d")
     if not args.end_date:

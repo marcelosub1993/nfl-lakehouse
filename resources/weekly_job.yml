@@ -1,0 +1,44 @@
+resources:
+  jobs:
+    nfl_weekly:
+      name: nfl_weekly
+      description: "Weekly: ingest the last 7 days of ESPN data, then refresh the pipeline"
+
+      tags: 
+        project: nfl
+      
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+
+      schedule:
+        quartz_cron_expression: "0 0 9 ? * TUE"
+        timezone_id: America/Sao_Paulo
+        pause_status: PAUSED
+      
+      email_notifications:
+        on_failure:
+          - ${var.alert_email}
+      
+      parameters:
+        - name: date
+          default: ""
+        - name: end_date
+          default: ""
+        - name: days_back
+          default: "7"
+
+      tasks:
+        - task_key: ingest
+          run_job_task:
+            job_id: ${resources.jobs.espn_ingest.id}
+            job_parameters:
+              date: "{{job.parameters.date}}"
+              end_date: "{{job.parameters.end_date}}"
+              days_back: "{{job.parameters.days_back}}"
+        
+        - task_key: refresh
+          depends_on:
+            - task_key: ingest
+          run_job_task:
+            job_id: ${resources.jobs.nfl_refresh.id}
+      
