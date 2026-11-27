@@ -40,3 +40,11 @@ targets:
       root_path: /Workspace/Users/${var.prod_deployer}/.bundle/${bundle.name}/${bundle.target}
     run_as:
       service_principal_name: ${var.prod_deployer}
+    resources:
+      schemas:
+        gold:
+          grants: 
+            - principal: nfl-readers
+              privileges:
+                - USE_SCHEMA
+                - SELECT
